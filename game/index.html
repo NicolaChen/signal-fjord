@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#152328">
+  <meta name="description" content="Signal Fjord — take a small plane through the North Reach at dawn.">
+  <title>Signal Fjord — North Reach Air Service</title>
+  <link rel="icon" href="./mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main id="game" aria-label="Signal Fjord">
+    <canvas id="scene" aria-label="3D chase view of the aircraft and fjord"></canvas>
+    <div id="vignette" aria-hidden="true"></div>
+    <header class="mast">
+      <div class="identity">
+        <img src="./mark.svg" alt="">
+        <div><b>NORTH REACH</b><small>AIR SERVICE · EST. 1936</small></div>
+      </div>
+      <button id="sound" class="quiet" type="button" aria-pressed="true" title="Toggle sound (M)">Sound on</button>
+    </header>
+
+    <div id="hud" hidden>
+      <div class="compass" aria-label="Heading">
+        <div class="compass-scale" id="compass-scale" aria-hidden="true"></div>
+        <div class="compass-caret">▴</div>
+        <div class="heading-read"><strong id="heading">000°</strong><span>HDG</span></div>
+      </div>
+      <aside class="mission panel">
+        <div class="eyebrow top-rule"><span id="sortie-code">01 / AIR MAIL</span><span class="live-dot" id="tower-link">LIVE</span></div>
+        <h2 id="sortie-title">The Morning Run</h2>
+        <p id="route-steps" class="route-steps"></p>
+        <p id="mission-note" class="mission-note"></p>
+      </aside>
+      <div id="target" class="world-target" aria-hidden="true"><b></b><span></span></div>
+      <svg id="reticle" viewBox="0 0 100 44" aria-hidden="true">
+        <path d="M13 18h22l8 7 7-4 7 4 8-7h22M50 11v4" />
+        <circle cx="50" cy="26" r="1.7" />
+      </svg>
+      <div id="toast" class="toast" aria-live="polite" hidden><b></b><span></span></div>
+      <aside id="localizer" class="localizer panel">
+        <div class="eyebrow top-rule"><span id="nav-mode">ROUTE LINK</span><span id="range">—</span></div>
+        <svg viewBox="0 0 212 70" aria-hidden="true">
+          <path class="scope" d="M19 35h174M105 9v54M82 7v56m47-56v56M58 29v11m94-11v11M35 29v11m140-11v11"/>
+          <path class="scope-home" d="M105 25l9 10-9 10-9-10z"/>
+          <path id="nav-diamond" d="M105 28l7 7-7 7-7-7z"/>
+          <path class="scope-nose" d="M101 55l4-4 4 4"/>
+        </svg>
+        <div id="nav-caption">BEACON ON BEARING</div>
+      </aside>
+
+      <section class="flight-deck" aria-label="Flight instruments">
+        <div class="instrument panel dial" id="speed-dial"><label>AIRSPEED</label><div><strong id="speed">142</strong><span>KT</span></div><small id="speed-help">INDICATED</small></div>
+        <div class="instrument panel dial"><label>ALTITUDE</label><div><strong id="altitude">607</strong><span>FT</span></div><small id="vertical-speed">↓ 354 FT/MIN</small></div>
+        <div class="instrument panel power">
+          <div><label>THROTTLE</label><output id="power">59%</output></div><i><em id="power-rail"></em></i>
+          <div><label>FUEL</label><output id="fuel">100%</output></div><i><em id="fuel-rail"></em></i>
+        </div>
+        <div class="instrument panel switches"><span id="gear">◇ GEAR UP</span><span id="brake">◇ BRAKE OFF</span><span id="hull">◆ HULL 100</span></div>
+      </section>
+      <p id="flight-hint" class="flight-hint"></p>
+      <footer class="flight-keys"><span><kbd>WASD</kbd> or drag · fly</span><span><kbd>Q</kbd><kbd>E</kbd> throttle</span><span><kbd>G</kbd> gear</span><span><kbd>F</kbd> drop</span><span><kbd>Space</kbd> brake</span><span><kbd>Esc</kbd> pause</span></footer>
+    </div>
+
+    <section id="briefing" class="briefing" aria-label="Sortie selection">
+      <div class="edition"><i></i> DISPATCH NO. 08 <span>·</span> DAWN SHIFT</div>
+      <h1>Signal <em>Fjord</em><span>.</span></h1>
+      <p class="tagline">Below the snow line.<br>Above the tide.</p>
+      <p class="introduction">Carry the North Reach over the water. Pick a dispatch and take the controls of the <b>Kestrel 07</b>.</p>
+      <div id="sortie-menu" class="sorties" role="group" aria-label="Dispatch"></div>
+      <p id="dispatch-order" class="dispatch-order" aria-live="polite"></p>
+      <button id="launch" class="primary" type="button">Fly this dispatch <span>↗</span></button>
+      <p class="brief-controls"><kbd>WASD</kbd> or drag to fly · <kbd>Q/E</kbd> throttle · <kbd>G</kbd> gear · <kbd>SPACE</kbd> brake<br>For pull-to-climb mouse control, invert pitch in the pause panel.</p>
+    </section>
+    <aside id="aircraft-plate" class="aircraft-plate"><span>NR–07</span><strong>Kestrel</strong><small>UTILITY TAILDRAGGER</small></aside>
+    <section id="debrief" class="modal panel" aria-label="Flight report" hidden>
+      <span id="report-code" class="eyebrow">FLIGHT REPORT</span>
+      <h2 id="report-title"></h2>
+      <p id="report-reason"></p>
+      <div class="report-grid" id="report-stats"></div>
+      <button type="button" id="again" class="primary">Fly again <span>↗</span></button>
+      <button type="button" id="home" class="quiet">All dispatches</button>
+    </section>
+    <section id="pause" class="modal panel" aria-label="Paused" hidden>
+      <span class="eyebrow">NORTH REACH · HOLDING</span>
+      <h2>Holding position.</h2>
+      <p>The sortie clock and fuel are paused.</p>
+      <button type="button" id="resume" class="primary">Resume flight <span>↗</span></button>
+      <div class="pause-actions"><button type="button" id="invert" class="quiet" aria-pressed="false">Invert pitch: off</button>
+      <button type="button" id="quit" class="quiet">All dispatches</button></div>
+    </section>
+    <div id="boot" role="status">TUNING BEACONS <span>·</span> GENERATING NORTH REACH</div>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
